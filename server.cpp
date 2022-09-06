@@ -2,7 +2,7 @@
 
 Server::Server()
 {
-    if(this->listen(QHostAddress::Any, 3333))
+    if(this->listen(QHostAddress::Any, 2323))
     {
         qDebug() << "Server starting!";
     }else
@@ -13,6 +13,7 @@ Server::Server()
 
 void Server::incomingConnection(qintptr socketDescription)
 {
+
     tcpSocket = new QTcpSocket;
     tcpSocket->setSocketDescriptor(socketDescription);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Server::slotReadyRead);
@@ -24,26 +25,33 @@ void Server::incomingConnection(qintptr socketDescription)
 
 void Server::slotReadyRead()
 {
+
     tcpSocket = (QTcpSocket*)sender();
     QDataStream in(tcpSocket);
-    in.setVersion(QDataStream::Qt_5_0);
+    in.setVersion(QDataStream::Qt_DefaultCompiledVersion);
     if(in.status() == QDataStream::Ok)
     {
         qDebug() << "Read...";
         QString str;
         in >> str;
         qDebug() << str;
+        SendToClient(str);
     }else
     {
         qDebug() << "DateStream error.";
     }
+
 }
 
 void Server::SendToClient(QString str)
 {
     Data.clear();
     QDataStream out(&Data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_0);
+    out.setVersion(QDataStream::Qt_DefaultCompiledVersion);
     out << str;
-    tcpSocket->write(Data);
+    //tcpSocket->write(Data);
+    for(int i = 0; i < tcpSockets.size(); ++i)
+    {
+        tcpSockets[i]->write(Data);
+    }
 }
